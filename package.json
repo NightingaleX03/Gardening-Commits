@@ -1,0 +1,21 @@
+{
+  "name": "contribution-garden",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A cozy contribution garden SVG for your GitHub profile README.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "generate": "npm run build && node dist/src/index.js",
+    "preview": "npm run build && node dist/src/preview.js",
+    "preview:demo": "npm run build && node dist/src/preview.js --demo"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  }
+}
