@@ -107,6 +107,7 @@ export function demoData(seed = 7): GardenData {
     totals: {
       contributions,
       commits: Math.round(contributions * 0.78),
+      privateContributions: 0,
       pullRequests: Math.round(contributions * 0.09),
       issues: Math.round(contributions * 0.04),
       reviews: Math.round(contributions * 0.07),

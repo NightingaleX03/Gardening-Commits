@@ -51,7 +51,7 @@ You can add any of these under the `uses:` line with `with:`:
 
 | Option | What it does | Default |
 | --- | --- | --- |
-| `look` | `sun`, `light` or `dark` (see below) | `light` |
+| `look` | `sun`, `light`, `dark` or `black` (see below) | `light` |
 | `latitude` | Roughly where you live, for the `sun` look | |
 | `longitude` | Roughly where you live, for the `sun` look | |
 | `config` | A JSON file in your repo with any other settings you want to change (see [Changing things](#changing-things)) | |
@@ -66,15 +66,18 @@ You can add any of these under the `uses:` line with `with:`:
 | --- | --- |
 | `light` | Always the sunny afternoon garden. |
 | `dark` | Always the cozy evening garden, with lit lanterns and fireflies. |
+| `black` | The same cozy evening garden, but on GitHub's dark-mode black, so the island floats right on the page instead of sitting in a box. You can pick a different color with `"blackBackground"` in your config file. |
 | `sun` | Follows the sun where you live: the afternoon garden during the day and the evening garden after sunset. It uses real sunrise and sunset times for your location, so it changes with the seasons. |
 
 For `sun`, just use a nearby city for `latitude` and `longitude`. You don't need your exact location (one decimal place is about 10 km, so nobody can find your house from it). You also need it to run every hour instead of once a day, so change the cron line to `'17 * * * *'`. It only commits when the picture actually changes.
+
+Every run also saves each look as its own file, so you can use them directly: `garden-light.svg`, `garden-dark.svg` and `garden-black.svg`.
 
 **Bonus option:** if you'd rather it match whoever is looking at it (light if their GitHub is in light mode, dark if it's in dark mode), use this in your README instead:
 
 ```html
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="garden/garden-dark.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="garden/garden-black.svg">
   <source media="(prefers-color-scheme: light)" srcset="garden/garden-light.svg">
   <img alt="My contribution garden" src="garden/garden-light.svg" width="100%">
 </picture>

@@ -46,6 +46,9 @@ export interface Palette {
   leaf: string;
 }
 
+/** light = sunny afternoon, dark = cozy evening, black = GitHub's dark-mode black. */
+export type GardenMode = 'light' | 'dark' | 'black';
+
 export interface Theme {
   // Background behind the floating island
   bgTop: string;
@@ -109,7 +112,7 @@ export interface GardenConfig {
    * Which look garden.svg gets. "sun" is light while the sun is up where you live and dark after
    * sunset (needs latitude/longitude); "light" and "dark" always use that look.
    */
-  look: { mode: 'sun' | 'light' | 'dark'; latitude?: number; longitude?: number };
+  look: { mode: 'sun' | GardenMode; latitude?: number; longitude?: number };
   /** "repos": language bytes across your own repos. "commits": commits in the last year by repo language. */
   languageSource: 'repos' | 'commits';
   /** Count private repos for languages/stars (needs a PAT with repo scope). */
@@ -135,5 +138,5 @@ export interface GardenConfig {
   };
   streakMinDays: number;
   critters: { maxButterflies: number; maxBees: number };
-  themes: { light: Theme; dark: Theme };
+  themes: Record<GardenMode, Theme>;
 }

@@ -268,7 +268,8 @@ export async function fetchGardenData(login: string, token: string, config: Gard
     languages,
     totals: {
       contributions: collection.contributionCalendar.totalContributions,
-      commits: collection.totalCommitContributions + collection.restrictedContributionsCount,
+      commits: collection.totalCommitContributions,
+      privateContributions: collection.restrictedContributionsCount,
       pullRequests: collection.totalPullRequestContributions,
       issues: collection.totalIssueContributions,
       reviews: collection.totalPullRequestReviewContributions,

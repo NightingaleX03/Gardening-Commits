@@ -4,7 +4,9 @@ import type { GardenConfig } from './src/types.js';
 export const config: GardenConfig = {
   // Your GitHub login. In GitHub Actions this is filled in automatically
   // from the repo owner (GARDEN_USERNAME), so you only need it for local runs.
-  username: process.env.GARDEN_USERNAME || process.env.GITHUB_REPOSITORY_OWNER || 'YOUR_GITHUB_USERNAME',
+  username: (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GARDEN_USERNAME
+    || (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GITHUB_REPOSITORY_OWNER
+    || 'YOUR_GITHUB_USERNAME',
   // title: 'my little garden',
   outputDir: 'garden',
 
@@ -12,6 +14,7 @@ export const config: GardenConfig = {
   //   'sun'   - light during the day and dark at night where you live
   //   'light' - always the sunny afternoon
   //   'dark'  - always the cozy evening
+  //   'black' - the cozy evening on GitHub's dark-mode black
   // For 'sun', put roughly where you live. A nearby city is plenty: one decimal
   // place is about 10 km, so you're not posting your exact address in a public repo.
   look: {
@@ -60,7 +63,7 @@ export const config: GardenConfig = {
   bouquet: {
     stems: 15, // total stems in the bouquet (12–20 looks best)
     minPercent: 3, // languages below this are tied in as "other" wildflowers
-    maxGroups: 8,
+    maxGroups: 8, // at most 8 languages fit in the legend, plus "other"
   },
 
   // Total contributions in the year needed to unlock each piece of scenery.
@@ -133,6 +136,54 @@ export const config: GardenConfig = {
       bgTop: '#2b221e',
       bgBottom: '#1b1513',
       bgGlow: '#3b2d26',
+      grassLight: '#728f4b',
+      grassMid: '#5d7a3d',
+      grassDark: '#47612f',
+      bushLight: '#6f8f47',
+      bushMid: '#4f6e35',
+      bushDark: '#354d24',
+      soilLight: '#7d4f2f',
+      soilMid: '#664027',
+      soilDark: '#4b2e1c',
+      woodLight: '#9b6a43',
+      woodMid: '#7e5232',
+      woodDark: '#5a3822',
+      stoneLight: '#a59a8c',
+      stoneMid: '#887d70',
+      stoneDark: '#665d53',
+      roofLight: '#94593b',
+      roofMid: '#7a4630',
+      roofDark: '#583222',
+      blossomLight: '#ecbccd',
+      blossomMid: '#d991ab',
+      blossomDark: '#bf6b8b',
+      ceramicLight: '#e9dccb',
+      ceramic: '#cdbba6',
+      ceramicShade: '#a99580',
+      wall: '#e0caa2',
+      wallShade: '#b39c78',
+      stem: '#4f6e35',
+      leaf: '#6f8f47',
+      glow: '#ffd27a',
+      glassOff: '#5d5a52',
+      shadow: '#0c0807',
+      text: '#f3e3c3',
+      textMuted: '#c2a88c',
+      parchment: '#eadcc0',
+      parchmentEdge: '#b99e78',
+      ink: '#4a3324',
+      inkMuted: '#86684f',
+      signText: '#fbe9cc',
+      signMuted: '#d9bc98',
+      petalLightness: 0.7,
+      petalSaturation: 0.66,
+      night: true,
+    },
+    // Cozy evening on a black GitHub background
+    black: {
+      bgTop: '#0d1117',
+      bgBottom: '#0d1117',
+      bgGlow: '#1b2733',
       grassLight: '#728f4b',
       grassMid: '#5d7a3d',
       grassDark: '#47612f',

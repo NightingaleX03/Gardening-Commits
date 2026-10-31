@@ -1,4 +1,4 @@
-import type { GardenConfig, Palette, Theme } from './types.js';
+import type { GardenConfig, GardenMode, Palette, Theme } from './types.js';
 import type { Group, Model } from './model.js';
 import { bouquetHead, bud } from './flowers.js';
 import { pastel } from './color.js';
@@ -1398,22 +1398,34 @@ function legend(model: Model, palettes: Map<string, Palette>, theme: Theme): str
 function statsSign(model: Model, theme: Theme): string {
   const totals = model.data.totals;
   const left = 24;
-  const top = 404;
   const width = 300;
-  const height = 138;
-  const plankHeight = height / 3;
+  const bottom = 542;
+
+  // One plank per row of text, so nothing sits on the gaps between boards:
+  // the heading, the two rows of stats, and a slim board for the activity line.
+  const plankHeights = [34, 46, 46, 26];
+  const height = plankHeights.reduce((sum, plankHeight) => sum + plankHeight, 0);
+  const top = bottom - height;
+
+  const plankTops: number[] = [];
+  let nextTop = top;
+
+  for (const plankHeight of plankHeights) {
+    plankTops.push(nextTop);
+    nextTop += plankHeight;
+  }
 
   let svg = `<rect x="${left + 3}" y="${top + 5}" width="${width}" height="${height}" rx="8" fill="${theme.shadow}" opacity=".25"/>`;
 
-  // Three planks, the middle one a shade darker.
-  for (let plank = 0; plank < 3; plank++) {
-    const plankTop = top + plank * plankHeight;
-    const corner = plank === 0 || plank === 2 ? 7 : 3;
+  plankHeights.forEach((plankHeight, index) => {
+    const plankTop = plankTops[index];
+    const isEdge = index === 0 || index === plankHeights.length - 1;
+    const color = index % 2 ? theme.woodMid : theme.woodLight;
 
-    svg += `<rect x="${left}" y="${num(plankTop)}" width="${width}" height="${num(plankHeight - 1.5)}" rx="${corner}" fill="${plank % 2 ? theme.woodMid : theme.woodLight}"/>`;
-    svg += `<rect x="${left}" y="${num(plankTop + plankHeight - 5)}" width="${width}" height="3.5" rx="1.5" fill="${theme.woodDark}" opacity=".55"/>`;
-    svg += strokePath(`M${left + 8} ${num(plankTop + 2)}H${left + width - 8}`, '#fff', 0.8, ' opacity=".18"');
-  }
+    svg += `<rect x="${left}" y="${plankTop}" width="${width}" height="${plankHeight - 1.5}" rx="${isEdge ? 7 : 3}" fill="${color}"/>`;
+    svg += `<rect x="${left}" y="${plankTop + plankHeight - 5}" width="${width}" height="3.5" rx="1.5" fill="${theme.woodDark}" opacity=".55"/>`;
+    svg += strokePath(`M${left + 8} ${plankTop + 2}H${left + width - 8}`, '#fff', 0.8, ' opacity=".18"');
+  });
 
   // Nails in the corners.
   const nails = [[left + 8, top + 8], [left + width - 8, top + 8], [left + 8, top + height - 9], [left + width - 8, top + height - 9]];
@@ -1422,29 +1434,57 @@ function statsSign(model: Model, theme: Theme): string {
     svg += `<circle cx="${x}" cy="${y}" r="2" fill="${theme.stoneDark}"/><circle cx="${x - 0.5}" cy="${y - 0.5}" r=".8" fill="${theme.stoneLight}"/>`;
   }
 
-  svg += `<text x="${left + 18}" y="${top + 24}" font-size="12" class="sign-text bold">garden journal</text>`;
-  svg += `<text x="${left + width - 18}" y="${top + 24}" font-size="9.5" text-anchor="end" class="sign-muted">${formatDate(model.data.from)} – ${formatDate(model.data.to)}</text>`;
+  // Heading plank.
+  const headingY = plankTops[0] + 21;
 
-  const stat = (x: number, y: number, value: string, label: string) =>
-    `<text x="${x}" y="${y}" font-size="15" class="sign-text bold">${value}</text><text x="${x}" y="${y + 12}" font-size="8" class="sign-muted" letter-spacing=".6">${label}</text>`;
+  svg += `<text x="${left + 18}" y="${headingY}" font-size="12" class="sign-text bold">garden journal</text>`;
+  svg += `<text x="${left + width - 18}" y="${headingY}" font-size="9.5" text-anchor="end" class="sign-muted">${formatDate(model.data.from)} – ${formatDate(model.data.to)}</text>`;
+
+  // The two stat planks: a big number with a small label under it, centred on the board.
+  const stat = (x: number, plankTop: number, value: string, label: string) =>
+    `<text x="${x}" y="${plankTop + 20}" font-size="15" class="sign-text bold">${value}</text>` +
+    `<text x="${x}" y="${plankTop + 32}" font-size="8" class="sign-muted" letter-spacing=".6">${label}</text>`;
   const days = (count: number) => `${formatNumber(count)} ${count === 1 ? 'day' : 'days'}`;
   const columns = [left + 18, left + 112, left + 206];
 
-  svg += stat(columns[0], top + 52, formatNumber(totals.contributions), 'CONTRIBUTIONS');
-  svg += stat(columns[1], top + 52, days(model.currentStreak), 'CURRENT STREAK');
-  svg += stat(columns[2], top + 52, days(model.longestStreak), 'LONGEST STREAK');
-  svg += stat(columns[0], top + 96, formatNumber(totals.stars), 'STARS · BUTTERFLIES');
-  svg += stat(columns[1], top + 96, formatNumber(totals.forks), 'FORKS · BEES');
-  svg += stat(columns[2], top + 96, formatNumber(totals.repos), 'REPOSITORIES');
+  svg += stat(columns[0], plankTops[1], formatNumber(totals.contributions), 'CONTRIBUTIONS');
+  svg += stat(columns[1], plankTops[1], days(model.currentStreak), 'CURRENT STREAK');
+  svg += stat(columns[2], plankTops[1], days(model.longestStreak), 'LONGEST STREAK');
+  svg += stat(columns[0], plankTops[2], formatNumber(totals.stars), 'STARS · BUTTERFLIES');
+  svg += stat(columns[1], plankTops[2], formatNumber(totals.forks), 'FORKS · BEES');
+  svg += stat(columns[2], plankTops[2], formatNumber(totals.repos), 'REPOSITORIES');
 
-  const activity = `${formatNumber(totals.commits)} commits · ${formatNumber(totals.pullRequests)} PRs · ${formatNumber(totals.issues)} issues · ${formatNumber(totals.reviews)} reviews`;
-  svg += `<text x="${left + 18}" y="${top + 128}" font-size="8.5" class="sign-muted">${activity}</text>`;
+  // Slim activity plank.
+  const activityParts = [
+    `${formatNumber(totals.commits)} commits`,
+    `${formatNumber(totals.pullRequests)} PRs`,
+    `${formatNumber(totals.issues)} issues`,
+    `${formatNumber(totals.reviews)} reviews`,
+  ];
+
+  if (totals.privateContributions > 0) {
+    activityParts.push(`${formatNumber(totals.privateContributions)} private`);
+  }
+
+  const activity = activityParts.join(' · ');
+  svg += `<text x="${left + 18}" y="${plankTops[3] + 16.5}" font-size="8.5" class="sign-muted">${activity}</text>`;
 
   return svg;
 }
 
-export function renderGarden(model: Model, config: GardenConfig, mode: 'light' | 'dark'): string {
-  const theme = config.themes[mode];
+/** The black look is the evening theme on a plain background, so it always matches the dark one. */
+function themeFor(config: GardenConfig, mode: GardenMode): Theme {
+  if (mode !== 'black') {
+    return config.themes[mode];
+  }
+
+  const background = config.blackBackground;
+
+  return { ...config.themes.dark, bgTop: background, bgBottom: background, bgGlow: background };
+}
+
+export function renderGarden(model: Model, config: GardenConfig, mode: GardenMode): string {
+  const theme = themeFor(config, mode);
   const palettes = new Map(model.groups.map((group) => [group.key, pastel(group.color, theme)] as const));
   const data = model.data;
 

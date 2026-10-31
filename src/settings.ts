@@ -59,17 +59,21 @@ export function loadConfig(): GardenConfig {
       throw new Error(`Couldn't find the config file "${configPath}".`);
     }
 
-    settings = merge(settings, JSON.parse(readFileSync(fullPath, 'utf8')) as PlainObject);
+    let fromFile: PlainObject;
+
+    try {
+      fromFile = JSON.parse(readFileSync(fullPath, 'utf8')) as PlainObject;
+    } catch (error) {
+      throw new Error(`The config file "${configPath}" isn't valid JSON: ${error instanceof Error ? error.message : error}`);
+    }
+
+    settings = merge(settings, fromFile);
   }
 
   const config = settings as unknown as GardenConfig;
 
-  // Options from the workflow win over the file.
+  // Options from the workflow win over the file. An empty option means "not set".
   const look = process.env.GARDEN_LOOK?.trim();
-
-  if (look && look !== 'sun' && look !== 'light' && look !== 'dark') {
-    throw new Error(`look should be "sun", "light" or "dark", but it was "${look}".`);
-  }
 
   config.look = {
     mode: (look as GardenConfig['look']['mode'] | undefined) || config.look.mode,
@@ -77,10 +81,21 @@ export function loadConfig(): GardenConfig {
     longitude: readNumber('GARDEN_LONGITUDE', 'longitude') ?? config.look.longitude,
   };
 
+  // Check the look last, so a typo in either the workflow or the file gets a clear message.
+  if (!['sun', 'light', 'dark', 'black'].includes(config.look.mode)) {
+    throw new Error(`look should be "sun", "light", "dark" or "black", but it was "${config.look.mode}".`);
+  }
+
   const outputDir = process.env.GARDEN_OUTPUT_DIR?.trim();
 
   if (outputDir) {
     config.outputDir = outputDir;
+  }
+
+  // The legend has room for 9 rows: up to 8 languages plus "other".
+  if (config.bouquet.maxGroups > 8) {
+    console.warn(`bouquet.maxGroups is ${config.bouquet.maxGroups}, but only 8 fit in the legend, so using 8.`);
+    config.bouquet.maxGroups = 8;
   }
 
   return config;

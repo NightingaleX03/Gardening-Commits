@@ -8,9 +8,9 @@ branding:
 
 inputs:
   look:
-    description: "How garden.svg looks: 'sun' (light by day, dark at night where you live), 'light' or 'dark'."
+    description: "How garden.svg looks: 'sun' (light by day, dark at night where you live), 'light', 'dark' or 'black' (the evening on GitHub's dark-mode black). Leave it out to use your config file, or 'light'."
     required: false
-    default: light
+    default: ''
   latitude:
     description: Roughly where you live, for the 'sun' look. A nearby city is plenty, e.g. 40.7
     required: false
@@ -72,7 +72,7 @@ runs:
       env:
         OUTPUT_DIR: ${{ inputs.output-dir }}
       run: |
-        git add "$OUTPUT_DIR/garden.svg" "$OUTPUT_DIR/garden-light.svg" "$OUTPUT_DIR/garden-dark.svg"
+        git add "$OUTPUT_DIR/garden.svg" "$OUTPUT_DIR/garden-light.svg" "$OUTPUT_DIR/garden-dark.svg" "$OUTPUT_DIR/garden-black.svg"
 
         if git diff --cached --quiet; then
           echo "Garden unchanged, nothing to commit."
@@ -82,4 +82,16 @@ runs:
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git commit -m "Update contribution garden"
-        git push
+
+        # If someone pushed while this was running, catch up first and try again.
+        for attempt in 1 2 3; do
+          if git push; then
+            exit 0
+          fi
+
+          echo "Push was rejected, pulling the latest changes and trying again."
+          git pull --rebase
+        done
+
+        echo "Couldn't push the garden after 3 tries."
+        exit 1

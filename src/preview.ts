@@ -27,6 +27,7 @@ writeFileSync(page, `<!doctype html><meta charset="utf-8"><title>Garden preview<
 <section><h2>Your look (garden.svg)</h2><img src="garden.svg"></section>
 <section><h2>Light (garden-light.svg)</h2><img src="garden-light.svg"></section>
 <section class="dark"><h2>Dark (garden-dark.svg)</h2><img src="garden-dark.svg"></section>
+<section class="dark"><h2>Black (garden-black.svg)</h2><img src="garden-black.svg"></section>
 <section>
   <h2>&lt;picture&gt;, follows your OS theme like GitHub does</h2>
   <picture>

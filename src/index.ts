@@ -9,7 +9,7 @@ import { buildModel } from './model.js';
 import { renderGarden } from './render.js';
 import { loadConfig } from './settings.js';
 import { sunIsUp } from './sun.js';
-import type { GardenConfig } from './types.js';
+import type { GardenConfig, GardenMode } from './types.js';
 
 export function findToken(): string | undefined {
   const fromEnvironment = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
@@ -29,7 +29,7 @@ export function findToken(): string | undefined {
 }
 
 /** Which look garden.svg should have right now. */
-export function pickLook(now: Date, config: GardenConfig): 'light' | 'dark' {
+export function pickLook(now: Date, config: GardenConfig): GardenMode {
   const { mode, latitude, longitude } = config.look;
 
   if (mode !== 'sun') {
@@ -72,9 +72,9 @@ export async function generate(options: { demo?: boolean; outDir?: string } = {}
 
   // One file per look, plus garden.svg in whichever look the config picks.
   const files: string[] = [];
-  const svgs = { light: '', dark: '' };
+  const svgs = { light: '', dark: '', black: '' };
 
-  for (const mode of ['light', 'dark'] as const) {
+  for (const mode of ['light', 'dark', 'black'] as const) {
     const svg = renderGarden(model, config, mode);
     const file = join(outDir, `garden-${mode}.svg`);
 
