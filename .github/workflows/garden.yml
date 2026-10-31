@@ -1,51 +1,28 @@
-name: Contribution garden
+name: Example garden
 
+# Runs this repo's own action to keep the example in the README up to date,
+# which also checks that the action still works after every change.
 on:
   schedule:
-    # Hourly, so the 'sun' look flips soon after sunrise and sunset. It only commits
-    # when a picture changed. With look 'light' or 'dark' you can use daily instead:
-    # '17 3 * * *'
-    - cron: '17 * * * *'
+    - cron: '17 3 * * *' # once a day
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['garden.config.ts', 'src/**', '.github/workflows/garden.yml']
+    paths: ['action.yml', 'garden.config.ts', 'src/**', 'package.json', 'package-lock.json', '.github/workflows/garden.yml']
 
 permissions:
   contents: write
 
 concurrency:
-  group: contribution-garden
+  group: example-garden
   cancel-in-progress: false
 
 jobs:
-  grow:
+  garden:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v5
+      - uses: ./
         with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci
-
-      - name: Generate garden SVGs
-        run: npm run generate
-        env:
-          # Optional repo secret GARDEN_TOKEN (a PAT) unlocks private contributions & languages.
-          GITHUB_TOKEN: ${{ secrets.GARDEN_TOKEN || secrets.GITHUB_TOKEN }}
-          GARDEN_USERNAME: ${{ github.repository_owner }}
-
-      - name: Commit if changed
-        run: |
-          git add garden/garden.svg garden/garden-light.svg garden/garden-dark.svg
-          if git diff --cached --quiet; then
-            echo "Garden unchanged, nothing to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Update contribution garden"
-          git push
+          output-dir: example

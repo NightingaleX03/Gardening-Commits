@@ -1,0 +1,85 @@
+name: Contribution Garden
+description: Turn your GitHub contributions into a cozy isometric garden for your profile README.
+author: NightingaleX03
+
+branding:
+  icon: sun
+  color: green
+
+inputs:
+  look:
+    description: "How garden.svg looks: 'sun' (light by day, dark at night where you live), 'light' or 'dark'."
+    required: false
+    default: light
+  latitude:
+    description: Roughly where you live, for the 'sun' look. A nearby city is plenty, e.g. 40.7
+    required: false
+    default: ''
+  longitude:
+    description: Roughly where you live, for the 'sun' look. A nearby city is plenty, e.g. -74.0
+    required: false
+    default: ''
+  config:
+    description: Path to a JSON file in your repo with any settings you want to change (colors, flowers, milestones and so on).
+    required: false
+    default: ''
+  output-dir:
+    description: Folder in your repo to save the pictures in.
+    required: false
+    default: garden
+  username:
+    description: Whose contributions to show. Defaults to the owner of the repo.
+    required: false
+    default: ${{ github.repository_owner }}
+  github-token:
+    description: Token for reading contributions. The default works for public data; use a personal access token for private contributions.
+    required: false
+    default: ${{ github.token }}
+  commit:
+    description: Commit the pictures back to your repo when they change. Set to 'false' to do it yourself.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 20
+
+    - name: Build the garden generator
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        npm ci --no-audit --no-fund
+        npm run build
+
+    - name: Grow the garden
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GARDEN_USERNAME: ${{ inputs.username }}
+        GARDEN_LOOK: ${{ inputs.look }}
+        GARDEN_LATITUDE: ${{ inputs.latitude }}
+        GARDEN_LONGITUDE: ${{ inputs.longitude }}
+        GARDEN_CONFIG: ${{ inputs.config }}
+        GARDEN_OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: node "$GITHUB_ACTION_PATH/dist/src/index.js"
+
+    - name: Commit the garden
+      if: inputs.commit == 'true'
+      shell: bash
+      env:
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: |
+        git add "$OUTPUT_DIR/garden.svg" "$OUTPUT_DIR/garden-light.svg" "$OUTPUT_DIR/garden-dark.svg"
+
+        if git diff --cached --quiet; then
+          echo "Garden unchanged, nothing to commit."
+          exit 0
+        fi
+
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git commit -m "Update contribution garden"
+        git push

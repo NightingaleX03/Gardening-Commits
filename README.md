@@ -1,12 +1,88 @@
 # Contribution Garden
 
-This turns my GitHub contributions into a cozy little garden instead of the usual green squares. Every day of the last year is a tile on a floating garden island, and the more I code, the more stuff grows. It updates itself with a GitHub Action, so I don't have to do anything once it's set up.
+This turns your GitHub contributions into a cozy little garden instead of the usual green squares. Every day of the last year is a tile on a floating garden island, and the more you code, the more stuff grows. It updates itself every day, so you don't have to do anything once it's set up.
 
-There's a sunny afternoon version and a cozy evening version with lanterns and fireflies, and you can pick how it switches between them (see [Pick how it looks](#pick-how-it-looks)).
+<img alt="Example contribution garden" src="example/garden.svg" width="100%">
+
+## Quick start
+
+**1.** In your profile repo (the one with the same name as your username), create a file called `.github/workflows/garden.yml` with this in it:
+
+```yaml
+name: Contribution garden
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # once a day
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  garden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: NightingaleX03/github-contribution@v1
+```
+
+**2.** Go to the **Actions** tab, click **Contribution garden** and press **Run workflow**. After about a minute, your garden is saved in a `garden` folder in your repo.
+
+**3.** Add this to your profile `README.md` wherever you want the garden:
+
+```html
+<img alt="My contribution garden" src="garden/garden.svg" width="100%">
+```
+
+That's it! If you had another contribution graphic set up before, delete its workflow file and the folder it made, so the two don't both run.
+
+## Options
+
+You can add any of these under the `uses:` line with `with:`:
+
+```yaml
+      - uses: NightingaleX03/github-contribution@v1
+        with:
+          look: sun
+          latitude: 40.7
+          longitude: -74.0
+```
+
+| Option | What it does | Default |
+| --- | --- | --- |
+| `look` | `sun`, `light` or `dark` (see below) | `light` |
+| `latitude` | Roughly where you live, for the `sun` look | |
+| `longitude` | Roughly where you live, for the `sun` look | |
+| `config` | A JSON file in your repo with any other settings you want to change (see [Changing things](#changing-things)) | |
+| `output-dir` | The folder the pictures are saved in | `garden` |
+| `username` | Whose contributions to show | The repo owner |
+| `github-token` | A personal access token, if you want private contributions counted | The normal GitHub token |
+| `commit` | Set to `false` if you want to commit the pictures yourself | `true` |
+
+### Pick how it looks
+
+| Look | What it does |
+| --- | --- |
+| `light` | Always the sunny afternoon garden. |
+| `dark` | Always the cozy evening garden, with lit lanterns and fireflies. |
+| `sun` | Follows the sun where you live: the afternoon garden during the day and the evening garden after sunset. It uses real sunrise and sunset times for your location, so it changes with the seasons. |
+
+For `sun`, just use a nearby city for `latitude` and `longitude`. You don't need your exact location (one decimal place is about 10 km, so nobody can find your house from it). You also need it to run every hour instead of once a day, so change the cron line to `'17 * * * *'`. It only commits when the picture actually changes.
+
+**Bonus option:** if you'd rather it match whoever is looking at it (light if their GitHub is in light mode, dark if it's in dark mode), use this in your README instead:
+
+```html
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="garden/garden-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="garden/garden-light.svg">
+  <img alt="My contribution garden" src="garden/garden-light.svg" width="100%">
+</picture>
+```
 
 ## How the tiles grow
 
-Each tile is one day, and it grows based on how much I coded that day (the same levels GitHub uses for the green squares).
+Each tile is one day, and it grows based on how much you coded that day (the same levels GitHub uses for the green squares).
 
 | That day | What grows |
 | --- | --- |
@@ -20,7 +96,7 @@ The weeks go along the island from left to right. Sunday to Wednesday are behind
 
 ## Goals
 
-This is the fun part: the garden unlocks things based on how many contributions I have in the year.
+This is the fun part: the garden unlocks things based on how many contributions you have in the year.
 
 | Contributions | What you get |
 | --- | --- |
@@ -31,93 +107,81 @@ This is the fun part: the garden unlocks things based on how many contributions 
 
 Other things that show up:
 
-- **Streaks:** if I code 7 or more days in a row, a little wooden arch with vines grows over the path at that week. The longest streak gets the biggest arch.
-- **Stars:** every star on my repos is a butterfly (up to 12).
+- **Streaks:** if you code 7 or more days in a row, a little wooden arch with vines grows over the path at that week. The longest streak gets the biggest arch.
+- **Stars:** every star on your repos is a butterfly (up to 12).
 - **Forks:** every fork is a bee (up to 8).
-- **Evening mode:** the lanterns and cottage windows light up, and there are fireflies.
 
 ## Flowers for each language
 
 Every language is its own kind of flower, and the colors are softer versions of GitHub's language colors.
 
-| Language | Flower | | Language | Flower |
-| --- | --- | --- | --- | --- |
-| TypeScript | Hydrangea | | C | Daisy |
-| JavaScript | Sunflower | | C++ | Dahlia |
-| Python | Iris | | C# | Camellia |
-| Rust | Rose | | Ruby | Peony |
-| Go | Forget-me-not | | PHP | Lavender |
-| HTML | Tulip | | Swift | Marigold |
-| CSS | Cosmos | | Kotlin | Anemone |
-| Java | Poppy | | Shell | Lily |
-| | | | Dart | Bluebell |
+| Language | Flower |
+| --- | --- |
+| TypeScript | Hydrangea |
+| JavaScript | Sunflower |
+| Python | Iris |
+| Rust | Rose |
+| Go | Forget-me-not |
+| HTML | Tulip |
+| CSS | Cosmos |
+| Java | Poppy |
+| C | Daisy |
+| C++ | Dahlia |
+| C# | Camellia |
+| Ruby | Peony |
+| PHP | Lavender |
+| Swift | Marigold |
+| Kotlin | Anemone |
+| Shell | Lily |
+| Dart | Bluebell |
 
 Any other language gets whichever flower isn't being used yet. Tiny languages (under 3%) are grouped together as "other" and show up as wildflowers.
 
-The flower on each day comes from whichever language I committed to most that day. On the side, there's a bouquet in a teapot that matches my language percentages, so if I'm 60% TypeScript, most of the bouquet is hydrangeas. There's a little legend next to it and a wooden sign with my stats.
+The flower on each day comes from whichever language you committed to most that day. On the side, there's a bouquet in a teapot that matches your language percentages, so if you're 60% TypeScript, most of the bouquet is hydrangeas. There's a little legend next to it and a wooden sign with your stats.
 
-## How to set it up
+## Changing things
 
-1. Put all of this in your profile repo (the one with the same name as your username).
-2. If you already have another contribution graphic set up, delete its workflow file in `.github/workflows/` and any folders it generated, so the two don't both run.
-3. Go to **Settings > Actions > General > Workflow permissions** and choose **Read and write permissions**.
-4. Pick how you want it to look (see the next section) and add the picture to your profile `README.md`.
-5. Push it, then go to the **Actions** tab and run "Contribution garden" once so you don't have to wait.
+Want different milestones, flowers or colors? Make a JSON file in your repo with just the things you want to change, for example `garden.json`:
 
-After that, it runs every hour by itself and only commits when the garden has actually changed.
-
-## Pick how it looks
-
-There are three options. Pick one in `garden.config.ts` under `look`:
-
-| Option | What it does |
-| --- | --- |
-| `'sun'` | Follows the sun where you live: the afternoon garden during the day and the evening garden after sunset. It uses real sunrise and sunset times for your location, so it changes with the seasons. |
-| `'light'` | Always the sunny afternoon garden. |
-| `'dark'` | Always the cozy evening garden. |
-
-For `'sun'`, you also need to add roughly where you live:
-
-```ts
-look: {
-  mode: 'sun',
-  latitude: 40.7,
-  longitude: -74.0,
-},
+```json
+{
+  "milestones": { "tree": 100, "bench": 500 },
+  "species": { "Elixir": "lavender" },
+  "languageColors": { "Python": "#6a8fd8" },
+  "excludeLanguages": ["Jupyter Notebook", "HTML"]
+}
 ```
 
-Just use a nearby city. You don't need your exact location (one decimal place is about 10 km, so nobody can find your house from it). You can look up your city's coordinates online.
+Then point the action at it:
 
-Then, for all three options, put this in your profile `README.md`:
-
-```html
-<img alt="My contribution garden" src="garden/garden.svg" width="100%">
+```yaml
+      - uses: NightingaleX03/github-contribution@v1
+        with:
+          config: garden.json
 ```
 
-The Action checks every hour, so it switches to evening within an hour of sunset. If you picked `'light'` or `'dark'`, you don't need it to run hourly. You can change the cron in `.github/workflows/garden.yml` to `'17 3 * * *'` so it only runs once a day.
-
-**Bonus option:** if you'd rather it match whoever is looking at it (light if their GitHub is in light mode, dark if it's in dark mode), use this instead:
-
-```html
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="garden/garden-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="garden/garden-light.svg">
-  <img alt="My contribution garden" src="garden/garden-light.svg" width="100%">
-</picture>
-```
+Everything you can change is listed in [`garden.config.ts`](garden.config.ts), including all the colors for light and dark mode.
 
 ## Private contributions
 
 By default, it only uses public data and the normal GitHub token, so there's nothing to set up. If you want private contributions counted:
 
-- Turn on "Include private contributions on my profile" in your GitHub profile settings.
-- Create a fine-grained personal access token that's read-only and has an expiration date.
-- Add it as a repository secret called `GARDEN_TOKEN`.
-- If you also want private repo languages and stars counted, set `includePrivate: true` in `garden.config.ts`.
+1. Turn on "Include private contributions on my profile" in your GitHub profile settings.
+2. Create a fine-grained personal access token that's read-only and has an expiration date.
+3. Add it to your profile repo as a repository secret called `GARDEN_TOKEN`.
+4. Pass it to the action:
 
-Heads up: this shows private activity counts and languages in the picture (but never repo names).
+```yaml
+      - uses: NightingaleX03/github-contribution@v1
+        with:
+          github-token: ${{ secrets.GARDEN_TOKEN }}
+```
 
-## Previewing it on your computer
+If you also want private repo languages and stars counted, add `"includePrivate": true` to your config file. Heads up: this shows private activity counts and languages in the picture (but never repo names).
+
+## Trying it on your computer
+
+If you want to play with the code, clone this repo and run:
 
 ```bash
 npm install
@@ -132,24 +196,13 @@ GITHUB_TOKEN=your_token GARDEN_USERNAME=your_username npm run preview
 
 On Windows PowerShell, use `$env:GITHUB_TOKEN="your_token"; $env:GARDEN_USERNAME="your_username"; npm run preview`.
 
-## Changing things
-
-Everything you'd want to change is in `garden.config.ts`:
-
-- `look`: sun, light or dark (see above).
-- `milestones`: how many contributions you need for each goal.
-- `species`: which flower goes with which language.
-- `languageColors`: change a language's color.
-- `excludeLanguages`: languages to leave out (Jupyter Notebook is left out by default because it throws off the percentages).
-- `bouquet`: how many stems there are and the cutoff for "other".
-- `critters`: the maximum number of butterflies and bees.
-- `themes`: all the colors for light and dark mode.
-
 ## What's in here
 
 | File | What it does |
 | --- | --- |
-| `garden.config.ts` | All the settings |
+| `action.yml` | Tells GitHub how to run the action |
+| `garden.config.ts` | All the default settings |
+| `src/settings.ts` | Combines the defaults, your config file and your options |
 | `src/github.ts` | Gets the contribution data from GitHub |
 | `src/model.ts` | Works out the flower for each day, the streaks and the bouquet |
 | `src/flowers.ts` | Draws all the flowers |
@@ -158,8 +211,8 @@ Everything you'd want to change is in `garden.config.ts`:
 | `src/sun.ts` | Works out whether the sun is up where you live |
 | `src/preview.ts` | The local preview |
 | `src/demo.ts` | Sample data for the preview |
-| `.github/workflows/garden.yml` | The Action that keeps it updated |
+| `.github/workflows/garden.yml` | Keeps the example garden above up to date |
 
 ## License
 
-MIT, so feel free to use it for your own profile. See `LICENSE`.
+MIT, so feel free to use it for your own profile. See [`LICENSE`](LICENSE).

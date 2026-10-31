@@ -3,12 +3,13 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { config } from '../garden.config.js';
 import { demoData } from './demo.js';
 import { fetchGardenData } from './github.js';
 import { buildModel } from './model.js';
 import { renderGarden } from './render.js';
+import { loadConfig } from './settings.js';
 import { sunIsUp } from './sun.js';
+import type { GardenConfig } from './types.js';
 
 export function findToken(): string | undefined {
   const fromEnvironment = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
@@ -28,7 +29,7 @@ export function findToken(): string | undefined {
 }
 
 /** Which look garden.svg should have right now. */
-export function pickLook(now: Date): 'light' | 'dark' {
+export function pickLook(now: Date, config: GardenConfig): 'light' | 'dark' {
   const { mode, latitude, longitude } = config.look;
 
   if (mode !== 'sun') {
@@ -36,7 +37,7 @@ export function pickLook(now: Date): 'light' | 'dark' {
   }
 
   if (latitude == null || longitude == null) {
-    console.warn('look.mode is "sun" but latitude/longitude are not set in garden.config.ts, using light.');
+    console.warn('The look is "sun" but latitude and longitude are not set, so using light.');
     return 'light';
   }
 
@@ -44,6 +45,7 @@ export function pickLook(now: Date): 'light' | 'dark' {
 }
 
 export async function generate(options: { demo?: boolean; outDir?: string } = {}): Promise<string[]> {
+  const config = loadConfig();
   const outDir = resolve(options.outDir ?? config.outputDir);
 
   let data;
@@ -58,7 +60,7 @@ export async function generate(options: { demo?: boolean; outDir?: string } = {}
     }
 
     if (config.username === 'YOUR_GITHUB_USERNAME') {
-      throw new Error('Set your username in garden.config.ts or GARDEN_USERNAME.');
+      throw new Error('Set your username with the username option or GARDEN_USERNAME.');
     }
 
     console.log(`Fetching contributions for ${config.username}…`);
@@ -82,7 +84,7 @@ export async function generate(options: { demo?: boolean; outDir?: string } = {}
     console.log(`Wrote ${file} (${(Buffer.byteLength(svg) / 1024).toFixed(1)} KB)`);
   }
 
-  const look = pickLook(new Date());
+  const look = pickLook(new Date(), config);
   const lookFile = join(outDir, 'garden.svg');
 
   writeFileSync(lookFile, svgs[look]);
