@@ -1472,19 +1472,8 @@ function statsSign(model: Model, theme: Theme): string {
   return svg;
 }
 
-/** The black look is the evening theme on a plain background, so it always matches the dark one. */
-function themeFor(config: GardenConfig, mode: GardenMode): Theme {
-  if (mode !== 'black') {
-    return config.themes[mode];
-  }
-
-  const background = config.blackBackground;
-
-  return { ...config.themes.dark, bgTop: background, bgBottom: background, bgGlow: background };
-}
-
 export function renderGarden(model: Model, config: GardenConfig, mode: GardenMode): string {
-  const theme = themeFor(config, mode);
+  const theme = config.themes[mode];
   const palettes = new Map(model.groups.map((group) => [group.key, pastel(group.color, theme)] as const));
   const data = model.data;
 

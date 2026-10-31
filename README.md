@@ -66,7 +66,7 @@ You can add any of these under the `uses:` line with `with:`:
 | --- | --- |
 | `light` | Always the sunny afternoon garden. |
 | `dark` | Always the cozy evening garden, with lit lanterns and fireflies. |
-| `black` | The same cozy evening garden, but on GitHub's dark-mode black, so the island floats right on the page instead of sitting in a box. You can pick a different color with `"blackBackground"` in your config file. |
+| `black` | The same cozy evening garden, but on GitHub's dark-mode black, so the island floats right on the page instead of sitting in a box. You can change its colors under `themes.black` in your config file. |
 | `sun` | Follows the sun where you live: the afternoon garden during the day and the evening garden after sunset. It uses real sunrise and sunset times for your location, so it changes with the seasons. |
 
 For `sun`, just use a nearby city for `latitude` and `longitude`. You don't need your exact location (one decimal place is about 10 km, so nobody can find your house from it). You also need it to run every hour instead of once a day, so change the cron line to `'17 * * * *'`. It only commits when the picture actually changes.

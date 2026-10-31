@@ -17,6 +17,8 @@ export interface LanguageStat {
 export interface Totals {
   contributions: number;
   commits: number;
+  /** Private activity. */
+  privateContributions: number;
   pullRequests: number;
   issues: number;
   reviews: number;
