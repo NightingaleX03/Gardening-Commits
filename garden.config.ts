@@ -22,6 +22,10 @@ export const config: GardenConfig = {
     latitude: undefined, // e.g. 40.7
     longitude: undefined, // e.g. -74.0
   },
+  // Opt in with 'auto', or pin spring, summer, fall, winter, halloween or christmas.
+  // Auto: meteorological seasons, Halloween Oct 25-31, Christmas Dec 20-26 (UTC).
+  theme: 'classic',
+  hemisphere: 'north',
 
   languageSource: 'repos',
   includePrivate: false,
