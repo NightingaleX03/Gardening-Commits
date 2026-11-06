@@ -1,8 +1,10 @@
-import type { GardenConfig, GardenMode, Palette, Theme } from './types.js';
+import type { GardenConfig, GardenMode, GardenTheme, Palette, Theme } from './types.js';
 import type { Group, Model } from './model.js';
 import { bouquetHead, bud } from './flowers.js';
 import { pastel } from './color.js';
 import { escapeXml, formatDate, formatNumber, num, seededRandom } from './util.js';
+import { pickTheme, seasonalPalette } from './themes.js';
+import { bat, candyCane, deadTree, ghost, pine, tombstone } from './seasonal-art.js';
 
 const WIDTH = 1000;
 const HEIGHT = 560;
@@ -313,7 +315,7 @@ function plant(level: number, group: Group, palette: Palette, theme: Theme): str
 
 // Shared definitions: gradients, filters and every shape that repeats.
 
-function defs(model: Model, palettes: Map<string, Palette>, theme: Theme): string {
+function defs(model: Model, palettes: Map<string, Palette>, theme: Theme, selection: GardenTheme): string {
   const glow = theme.glow;
   let svg = '';
 
@@ -367,8 +369,10 @@ function defs(model: Model, palettes: Map<string, Palette>, theme: Theme): strin
   svg += `<g id="fence-picket-side"><path d="M-3.2 1.6L-4.4 1L-4.4 -12L-3.2 -11.4Z" fill="${theme.woodMid}"/>` +
     `<path d="M0 0L-3.2 1.6L-3.2 -11.4L-1.6 -14.6L0 -13Z" fill="${theme.woodDark}"/></g>`;
 
-  // Cherry petal.
-  svg += `<path id="petal" d="M0 0C1.4 -1.8 4 -1.4 3.6 .6C3.1 2.4 .9 2.1 0 0Z"/>`;
+  // The same shared shape covers both fallen and drifting foliage.
+  svg += selection === 'fall'
+    ? `<path id="petal" data-decoration="autumn-leaf" d="M0 -3L1 -1L3 -2L2 0L4 1L1 2L0 4L-1 2L-4 1L-2 0L-3 -2L-1 -1Z"/>`
+    : `<path id="petal" d="M0 0C1.4 -1.8 4 -1.4 3.6 .6C3.1 2.4 .9 2.1 0 0Z"/>`;
 
   return `<defs>${svg}</defs>`;
 }
@@ -604,7 +608,7 @@ function fence(theme: Theme, hasCottage: boolean): string {
   return svg;
 }
 
-function cherryTree(theme: Theme): string {
+function cherryTree(theme: Theme, selection: GardenTheme): string {
   const random = seededRandom(31);
   const [baseX, baseY] = toScreen(2.4, 2.1);
 
@@ -646,7 +650,7 @@ function cherryTree(theme: Theme): string {
     const x = baseX + 2 + (random() - 0.5) * 118;
     const y = baseY - 72 + (random() - 0.5) * 70;
     const radius = 0.8 + random();
-    const color = random() < 0.5 ? '#fff4f8' : theme.blossomDark;
+    const color = random() < 0.5 ? (selection === 'fall' || selection === 'summer' ? theme.blossomLight : '#fff4f8') : theme.blossomDark;
 
     svg += `<circle cx="${num(x)}" cy="${num(y)}" r="${num(radius)}" fill="${color}" opacity=".85"/>`;
   }
@@ -1043,7 +1047,7 @@ function bee(x: number, y: number, index: number): string {
 
 // The whole garden island
 
-function garden(model: Model, palettes: Map<string, Palette>, config: GardenConfig, theme: Theme): string {
+function garden(model: Model, palettes: Map<string, Palette>, config: GardenConfig, theme: Theme, selection: GardenTheme): string {
   const total = model.data.totals.contributions;
   const milestones = config.milestones;
 
@@ -1066,7 +1070,9 @@ function garden(model: Model, palettes: Map<string, Palette>, config: GardenConf
   };
 
   // Flat things first: the island, ground details, the path and the fence behind everything.
-  let svg = island(theme) + groundDetails(model, theme, unlocked.tree) + cobblestones(theme, unlocked.cottage);
+  const snowy = selection === 'winter' || selection === 'christmas';
+  const spooky = selection === 'halloween';
+  let svg = island(theme) + groundDetails(model, theme, unlocked.tree && !snowy && !spooky && selection !== 'summer') + cobblestones(theme, unlocked.cottage);
 
   if (unlocked.fence) {
     svg += fence(theme, unlocked.cottage);
@@ -1074,6 +1080,30 @@ function garden(model: Model, palettes: Map<string, Palette>, config: GardenConf
 
   // Everything that stands up is drawn back to front, sorted by along + across.
   const items: { depth: number; svg: string }[] = [];
+  const decoration = (along: number, across: number, art: string, scale = 1) => {
+    const [x, y] = toScreen(along, across);
+    items.push({
+      depth: along + across,
+      svg: `<g transform="translate(${num(x)} ${num(y)}) scale(${num(scale)})">${art}</g>`,
+    });
+  };
+
+  if (snowy) {
+    for (const along of [12, 34, 48]) {
+      decoration(along, 1.6, pine(theme, selection === 'christmas'), 0.38);
+    }
+  }
+  if (spooky || selection === 'christmas') {
+    for (const along of [8, 20, 32, 44, 54]) {
+      decoration(along, 12.5, spooky ? tombstone(theme) : candyCane(), 0.8);
+    }
+    if (spooky) {
+      decoration(17, 1.5, deadTree(theme), 0.4);
+      decoration(43, 1.5, deadTree(theme), 0.35);
+      decoration(5, 5, ghost(0), 0.8);
+      decoration(39, 2, bat(0, theme), 0.7);
+    }
+  }
 
   for (const plot of model.plots) {
     const { along, across } = tilePosition(plot.week, plot.weekday, model.weekCount);
@@ -1144,7 +1174,11 @@ function garden(model: Model, palettes: Map<string, Palette>, config: GardenConf
 
   // Milestone scenery.
   if (unlocked.tree) {
-    items.push({ depth: 4.5, svg: cherryTree(theme) });
+    if (snowy || spooky) {
+      decoration(2.4, 2.1, spooky ? deadTree(theme) : pine(theme, selection === 'christmas'));
+    } else {
+      items.push({ depth: 4.5, svg: cherryTree(theme, selection) });
+    }
   }
 
   if (unlocked.bench) {
@@ -1173,7 +1207,7 @@ function garden(model: Model, palettes: Map<string, Palette>, config: GardenConf
     const along = 6 + random() * 50;
     const across = 12.2 + random() * 0.6;
     const [x, y] = toScreen(along, across);
-    const color = [theme.blossomLight, '#fff6e8', theme.glow, theme.blossomMid][index % 4];
+    const color = snowy ? theme.grassLight : [theme.blossomLight, '#fff6e8', theme.glow, theme.blossomMid][index % 4];
 
     let flowers = '';
 
@@ -1199,14 +1233,16 @@ function garden(model: Model, palettes: Map<string, Palette>, config: GardenConf
     const palette = colors[index % colors.length];
     const [x, y] = toScreen(6 + critterRandom() * 50, 1 + critterRandom() * 11, 28 + critterRandom() * 34);
 
-    svg += butterfly(x, y, index, palette.petal, palette.petalLight, theme.night ? '#f3e3c3' : '#6b4a35');
+    svg += spooky
+      ? `<g transform="translate(${num(x)} ${num(y)}) scale(.7)">${bat(index, theme)}</g>`
+      : butterfly(x, y, index, palette.petal, palette.petalLight, theme.night ? '#f3e3c3' : '#6b4a35');
   }
 
   const beeCount = Math.min(config.critters.maxBees, model.data.totals.forks);
 
   for (let index = 0; index < beeCount; index++) {
     const [x, y] = toScreen(6 + critterRandom() * 50, 3 + critterRandom() * 8, 14 + critterRandom() * 10);
-    svg += bee(x, y, index);
+    svg += spooky ? `<g transform="translate(${num(x)} ${num(y)}) scale(.6)">${ghost(index)}</g>` : bee(x, y, index);
   }
 
   if (theme.night) {
@@ -1223,9 +1259,13 @@ function garden(model: Model, palettes: Map<string, Palette>, config: GardenConf
 }
 
 /** Cherry petals drifting down over the scene. */
-function fallingPetals(theme: Theme, hasTree: boolean): string {
+function fallingPetals(theme: Theme, hasTree: boolean, selection: GardenTheme): string {
+  if (selection === 'halloween' || selection === 'summer') {
+    return '';
+  }
+  const snowy = selection === 'winter' || selection === 'christmas';
   const random = seededRandom(64);
-  const count = hasTree ? 24 : 10;
+  const count = snowy ? 38 : hasTree ? 24 : 10;
   let svg = '';
 
   for (let index = 0; index < count; index++) {
@@ -1234,7 +1274,10 @@ function fallingPetals(theme: Theme, hasTree: boolean): string {
     const delay = -(random() * 16).toFixed(1);
     const color = index % 2 ? theme.blossomMid : theme.blossomLight;
 
-    svg += `<g transform="translate(${num(x)} ${num(y)})"><use href="#petal" class="falling-petal petal-path-${index % 3}" style="animation-delay:${delay}s" fill="${color}"/></g>`;
+    const shape = snowy
+      ? `<circle data-decoration="snow" r="${num(1.3 + random() * 1.4)}" class="falling-petal petal-path-${index % 3}" style="animation-delay:${delay}s" fill="#f7fcff"/>`
+      : `<use href="#petal" class="falling-petal petal-path-${index % 3}" style="animation-delay:${delay}s" fill="${color}"/>`;
+    svg += `<g transform="translate(${num(x)} ${num(y)})">${shape}</g>`;
   }
 
   return svg;
@@ -1395,7 +1438,7 @@ function legend(model: Model, palettes: Map<string, Palette>, theme: Theme): str
 }
 
 /** The "garden journal" stats, on a little wooden sign. */
-function statsSign(model: Model, theme: Theme): string {
+function statsSign(model: Model, theme: Theme, selection: GardenTheme): string {
   const totals = model.data.totals;
   const left = 24;
   const width = 300;
@@ -1450,8 +1493,8 @@ function statsSign(model: Model, theme: Theme): string {
   svg += stat(columns[0], plankTops[1], formatNumber(totals.contributions), 'CONTRIBUTIONS');
   svg += stat(columns[1], plankTops[1], days(model.currentStreak), 'CURRENT STREAK');
   svg += stat(columns[2], plankTops[1], days(model.longestStreak), 'LONGEST STREAK');
-  svg += stat(columns[0], plankTops[2], formatNumber(totals.stars), 'STARS · BUTTERFLIES');
-  svg += stat(columns[1], plankTops[2], formatNumber(totals.forks), 'FORKS · BEES');
+  svg += stat(columns[0], plankTops[2], formatNumber(totals.stars), selection === 'halloween' ? 'STARS · BATS' : 'STARS · BUTTERFLIES');
+  svg += stat(columns[1], plankTops[2], formatNumber(totals.forks), selection === 'halloween' ? 'FORKS · GHOSTS' : 'FORKS · BEES');
   svg += stat(columns[2], plankTops[2], formatNumber(totals.repos), 'REPOSITORIES');
 
   // Slim activity plank.
@@ -1472,8 +1515,9 @@ function statsSign(model: Model, theme: Theme): string {
   return svg;
 }
 
-export function renderGarden(model: Model, config: GardenConfig, mode: GardenMode): string {
-  const theme = config.themes[mode];
+export function renderGarden(model: Model, config: GardenConfig, mode: GardenMode, now = new Date()): string {
+  const selection = pickTheme(now, config);
+  const theme = seasonalPalette(config.themes[mode], selection, mode);
   const palettes = new Map(model.groups.map((group) => [group.key, pastel(group.color, theme)] as const));
   const data = model.data;
 
@@ -1481,22 +1525,23 @@ export function renderGarden(model: Model, config: GardenConfig, mode: GardenMod
   const title = config.title ?? `${owner}’s garden`;
   const languageList = model.groups.map((group) => `${group.label} ${group.wholePercent}% (${group.species.name})`).join(', ');
   const description = `${formatNumber(data.totals.contributions)} contributions from ${formatDate(data.from)} to ${formatDate(data.to)}, grown as an isometric garden. ` +
-    `Languages: ${languageList}.`;
+    `Languages: ${languageList}.` +
+    (selection === 'classic' ? '' : ` Scenery: ${selection}.`);
   const hasTree = data.totals.contributions >= config.milestones.tree;
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${WIDTH} ${HEIGHT}" width="${WIDTH}" height="${HEIGHT}" role="img" aria-labelledby="garden-title garden-description">`,
     `<title id="garden-title">${escapeXml(title)}</title><desc id="garden-description">${escapeXml(description)}</desc>`,
     `<style>${styles(theme)}</style>`,
-    defs(model, palettes, theme),
+    defs(model, palettes, theme, selection),
     `<rect width="${WIDTH}" height="${HEIGHT}" fill="url(#background)"/><rect width="${WIDTH}" height="${HEIGHT}" fill="url(#background-glow)"/>`,
-    garden(model, palettes, config, theme),
+    garden(model, palettes, config, theme, selection),
     `<text x="505" y="44" font-size="21" text-anchor="middle" class="title bold">${escapeXml(title)}</text>`,
     `<text x="505" y="64" font-size="11" text-anchor="middle" class="muted">${formatNumber(data.totals.contributions)} contributions in the last year · each tile is a day</text>`,
     bouquet(model, palettes, theme),
     legend(model, palettes, theme),
-    statsSign(model, theme),
-    fallingPetals(theme, hasTree),
+    statsSign(model, theme, selection),
+    fallingPetals(theme, hasTree, selection),
     `</svg>`,
   ].join('\n');
 }
