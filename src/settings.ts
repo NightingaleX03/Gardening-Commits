@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 
 import { config as defaults } from '../garden.config.js';
 import type { GardenConfig } from './types.js';
+import { THEME_SELECTIONS } from './themes.js';
 
 type PlainObject = Record<string, unknown>;
 
@@ -87,6 +88,19 @@ export function loadConfig(): GardenConfig {
   }
 
   const outputDir = process.env.GARDEN_OUTPUT_DIR?.trim();
+
+  const theme = process.env.GARDEN_THEME?.trim() || config.theme;
+  const hemisphere = process.env.GARDEN_HEMISPHERE?.trim() || config.hemisphere;
+  const selectedTheme = THEME_SELECTIONS.find((selection) => selection === theme);
+
+  if (!selectedTheme) {
+    throw new Error(`theme should be one of ${THEME_SELECTIONS.join(', ')}, but it was "${theme}".`);
+  }
+  if (hemisphere !== 'north' && hemisphere !== 'south') {
+    throw new Error(`hemisphere should be "north" or "south", but it was "${hemisphere}".`);
+  }
+  config.theme = selectedTheme;
+  config.hemisphere = hemisphere;
 
   if (outputDir) {
     config.outputDir = outputDir;

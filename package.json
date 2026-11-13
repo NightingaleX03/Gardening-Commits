@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/src/*.test.js",
     "generate": "npm run build && node dist/src/index.js",
     "preview": "npm run build && node dist/src/preview.js",
     "preview:demo": "npm run build && node dist/src/preview.js --demo"
