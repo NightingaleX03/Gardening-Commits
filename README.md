@@ -52,6 +52,8 @@ You can add any of these under the `uses:` line with `with:`:
 | Option | What it does | Default |
 | --- | --- | --- |
 | `look` | `sun`, `light`, `dark` or `black` (see below) | `light` |
+| `theme` | `classic`, `auto`, `spring`, `summer`, `fall`, `winter`, `halloween` or `christmas` | `classic` |
+| `hemisphere` | `north` or `south`, for automatic seasons | `north` |
 | `latitude` | Roughly where you live, for the `sun` look | |
 | `longitude` | Roughly where you live, for the `sun` look | |
 | `config` | A JSON file in your repo with any other settings you want to change (see [Changing things](#changing-things)) | |
@@ -82,6 +84,54 @@ Every run also saves each look as its own file, so you can use them directly: `g
   <img alt="My contribution garden" src="garden/garden-light.svg" width="100%">
 </picture>
 ```
+
+### NEW: Seasonal and holiday themes
+
+Keep the original garden with `theme: classic`, pin a favorite theme all year, or
+opt in to automatic seasons and holidays:
+
+```yaml
+      - uses: NightingaleX03/github-contribution@v1
+        with:
+          theme: auto
+          hemisphere: north
+          look: black
+```
+
+| Theme | Scenery |
+| --- | --- |
+| `classic` | The original cherry-blossom garden, unchanged (default). |
+| `spring` | Fresh greens and pink cherry blossoms. |
+| `summer` | Lush green tree foliage and sunny golden colors. |
+| `fall` | Red, orange and gold foliage with drifting autumn leaves. |
+| `winter` | Snowy ground and rooftops, pines with soft snow patches along their branches and falling snow. |
+| `halloween` | Dead trees, tombstones, floating ghosts and bats; star butterflies become bats and fork bees become ghosts. |
+| `christmas` | Decorated Christmas trees with softly snow-dusted branches, candy canes and snow. |
+
+`auto` uses the **current UTC date when the workflow runs**, not the dates of your
+contributions. Northern seasons are March–May (spring), June–August (summer),
+September–November (fall) and December–February (winter). Set `hemisphere: south`
+to reverse the seasons. Halloween overrides the season on **October 25–31** and
+Christmas on **December 20–26**, inclusive, in either hemisphere. Outside those
+windows, the seasonal theme returns. Manual themes always override the calendar.
+
+Themes work with every `look`, including `sun`, and apply consistently to all four
+output SVGs. `black` keeps its GitHub-black background. Your language flowers,
+contribution growth levels, statistics and milestone thresholds are preserved;
+the milestone tree becomes a pine, decorated tree or dead tree where appropriate.
+Small holiday decorations appear even before milestones are unlocked. Animations
+respect reduced-motion preferences. Your daily schedule is enough for automatic
+themes; an SVG changes theme on the next workflow run, not while being viewed.
+
+You can also set `"theme": "auto"` and `"hemisphere": "south"` in your JSON config.
+Workflow inputs override these settings. To preview one locally:
+
+```bash
+GARDEN_THEME=halloween npm run preview:demo
+GARDEN_THEME=christmas npm run preview:demo
+```
+
+On PowerShell, set `$env:GARDEN_THEME="halloween"` before running `npm run preview:demo`.
 
 ## How the tiles grow
 
@@ -210,6 +260,9 @@ On Windows PowerShell, use `$env:GITHUB_TOKEN="your_token"; $env:GARDEN_USERNAME
 | `src/model.ts` | Works out the flower for each day, the streaks and the bouquet |
 | `src/flowers.ts` | Draws all the flowers |
 | `src/render.ts` | Draws the whole garden |
+| `src/themes.ts` | Selects seasons and holidays and applies their scenery colors |
+| `src/seasonal-art.ts` | Draws pines, Christmas decorations and spooky scenery |
+| `src/themes.test.ts` | Theme selection, settings and rendering tests (`npm test`) |
 | `src/index.ts` | Makes the SVG files |
 | `src/sun.ts` | Works out whether the sun is up where you live |
 | `src/preview.ts` | The local preview |

@@ -9,6 +9,7 @@ import { buildModel } from './model.js';
 import { renderGarden } from './render.js';
 import { loadConfig } from './settings.js';
 import { sunIsUp } from './sun.js';
+import { pickTheme } from './themes.js';
 import type { GardenConfig, GardenMode } from './types.js';
 
 export function findToken(): string | undefined {
@@ -73,9 +74,10 @@ export async function generate(options: { demo?: boolean; outDir?: string } = {}
   // One file per look, plus garden.svg in whichever look the config picks.
   const files: string[] = [];
   const svgs = { light: '', dark: '', black: '' };
+  const now = new Date();
 
   for (const mode of ['light', 'dark', 'black'] as const) {
-    const svg = renderGarden(model, config, mode);
+    const svg = renderGarden(model, config, mode, now);
     const file = join(outDir, `garden-${mode}.svg`);
 
     svgs[mode] = svg;
@@ -84,12 +86,12 @@ export async function generate(options: { demo?: boolean; outDir?: string } = {}
     console.log(`Wrote ${file} (${(Buffer.byteLength(svg) / 1024).toFixed(1)} KB)`);
   }
 
-  const look = pickLook(new Date(), config);
+  const look = pickLook(now, config);
   const lookFile = join(outDir, 'garden.svg');
 
   writeFileSync(lookFile, svgs[look]);
   files.push(lookFile);
-  console.log(`Wrote ${lookFile} (${look}, look mode "${config.look.mode}")`);
+  console.log(`Wrote ${lookFile} (${look}, look mode "${config.look.mode}", theme "${pickTheme(now, config)}")`);
 
   const flowers = model.groups.map((group) => `${group.species.name}=${group.label} ${group.wholePercent}%×${group.stems}`);
   console.log(`   ${data.totals.contributions} contributions · ${flowers.join(', ')}`);
