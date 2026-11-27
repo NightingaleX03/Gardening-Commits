@@ -7,6 +7,14 @@ branding:
   color: green
 
 inputs:
+  theme:
+    description: "Scenery: classic, auto (seasons and holidays), spring, summer, fall, winter, halloween or christmas. Defaults to your config file or classic."
+    required: false
+    default: ''
+  hemisphere:
+    description: "Season calendar for auto: north or south. Defaults to your config file or north. Holiday dates are the same in both."
+    required: false
+    default: ''
   look:
     description: "How garden.svg looks: 'sun' (light by day, dark at night where you live), 'light', 'dark' or 'black' (the evening on GitHub's dark-mode black). Leave it out to use your config file, or 'light'."
     required: false
@@ -60,6 +68,8 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         GARDEN_USERNAME: ${{ inputs.username }}
         GARDEN_LOOK: ${{ inputs.look }}
+        GARDEN_THEME: ${{ inputs.theme }}
+        GARDEN_HEMISPHERE: ${{ inputs.hemisphere }}
         GARDEN_LATITUDE: ${{ inputs.latitude }}
         GARDEN_LONGITUDE: ${{ inputs.longitude }}
         GARDEN_CONFIG: ${{ inputs.config }}
