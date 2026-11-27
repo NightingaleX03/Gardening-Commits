@@ -2,7 +2,13 @@
 
 This turns your GitHub contributions into a cozy little garden instead of the usual green squares. Every day of the last year is a tile on a floating garden island, and the more you code, the more stuff grows. It updates itself every day, so you don't have to do anything once it's set up.
 
-<img alt="Example contribution garden" src="example/garden.svg" width="100%">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/NightingaleX03/NightingaleX03/main/garden/garden-black.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/NightingaleX03/NightingaleX03/main/garden/garden-light.svg">
+  <img alt="My contribution garden" src="https://raw.githubusercontent.com/NightingaleX03/NightingaleX03/main/garden/garden-light.svg" width="100%">
+</picture>
+
+*This is my own garden, grown by this action on my profile.*
 
 ## Quick start
 
@@ -214,7 +220,6 @@ On Windows PowerShell, use `$env:GITHUB_TOKEN="your_token"; $env:GARDEN_USERNAME
 | `src/sun.ts` | Works out whether the sun is up where you live |
 | `src/preview.ts` | The local preview |
 | `src/demo.ts` | Sample data for the preview |
-| `.github/workflows/garden.yml` | Keeps the example garden above up to date |
 
 ## License
 
