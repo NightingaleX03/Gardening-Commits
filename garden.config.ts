@@ -23,6 +23,9 @@ export const config: GardenConfig = {
     longitude: undefined, // e.g. -74.0
   },
 
+  // 'personal' = grows based on your usual range, 'github' = same as the green squares
+  levelStyle: 'personal',
+
   languageSource: 'repos',
   includePrivate: false,
   excludeLanguages: ['Jupyter Notebook'],

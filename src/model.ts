@@ -91,6 +91,53 @@ function apportion(shares: number[], total: number, minimum: number): number[] {
   return result;
 }
 
+// e.g. 0.9 = the value 90% of the way through the list
+function percentile(sorted: number[], fraction: number): number {
+  const position = (sorted.length - 1) * fraction;
+  const below = Math.floor(position);
+  const above = Math.ceil(position);
+
+  return sorted[below] + (sorted[above] - sorted[below]) * (position - below);
+}
+
+// Compares each day to your usual range (ignoring the top and bottom 10%)
+// so one crazy day doesn't make every other day look tiny.
+export function personalLevels(counts: number[]): Level[] {
+  const active = counts.filter((count) => count > 0).sort((a, b) => a - b);
+
+  if (active.length === 0) {
+    return counts.map((): Level => 0);
+  }
+
+  const usualLow = percentile(active, 0.1);
+  const usualHigh = percentile(active, 0.9);
+  const range = usualHigh - usualLow;
+
+  return counts.map((count) => {
+    if (count === 0) {
+      return 0;
+    }
+
+    if (count >= usualHigh) {
+      return 4;
+    }
+
+    // log scale so 2 -> 4 counts the same as 10 -> 20
+    // if every day is about the same, just compare to your usual day
+    const position = range >= 1 ? Math.log(count / usualLow) / Math.log(usualHigh / usualLow) : count / usualHigh;
+
+    if (position < 1 / 3) {
+      return 1;
+    }
+
+    if (position < 2 / 3) {
+      return 2;
+    }
+
+    return 3;
+  });
+}
+
 export function buildModel(data: GardenData, config: GardenConfig): Model {
   // Language shares, biggest first.
   const excluded = new Set(config.excludeLanguages.map((name) => name.toLowerCase()));
@@ -179,11 +226,17 @@ export function buildModel(data: GardenData, config: GardenConfig): Model {
 
   const fallback = groups.find((group) => group.key === 'other') ?? groups[0];
 
-  const plots: Plot[] = data.days.map((day) => {
+  // personal levels by default, or GitHub's if you want the old look
+  const levels = config.levelStyle === 'github'
+    ? data.days.map((day) => day.level)
+    : personalLevels(data.days.map((day) => day.count));
+
+  const plots: Plot[] = data.days.map((day, index) => {
     const seed = hashString(day.date);
+    const level = levels[index];
     let group: Group | null = null;
 
-    if (day.level > 0) {
+    if (level > 0) {
       const languagesThatDay = Object.entries(data.dayLanguages[day.date] ?? {}).sort((a, b) => b[1] - a[1]);
 
       if (languagesThatDay.length) {
@@ -196,7 +249,7 @@ export function buildModel(data: GardenData, config: GardenConfig): Model {
       }
     }
 
-    return { date: day.date, week: day.week, weekday: day.weekday, level: day.level, group, seed };
+    return { date: day.date, week: day.week, weekday: day.weekday, level, group, seed };
   });
 
   // Streaks: runs of days in a row with at least one contribution.

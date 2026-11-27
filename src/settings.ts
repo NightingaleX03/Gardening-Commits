@@ -92,6 +92,10 @@ export function loadConfig(): GardenConfig {
     config.outputDir = outputDir;
   }
 
+  if (config.levelStyle !== 'personal' && config.levelStyle !== 'github') {
+    throw new Error(`levelStyle should be "personal" or "github", but it was "${config.levelStyle}".`);
+  }
+
   // The legend has room for 9 rows: up to 8 languages plus "other".
   if (config.bouquet.maxGroups > 8) {
     console.warn(`bouquet.maxGroups is ${config.bouquet.maxGroups}, but only 8 fit in the legend, so using 8.`);

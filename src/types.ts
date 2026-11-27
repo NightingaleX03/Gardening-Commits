@@ -115,6 +115,8 @@ export interface GardenConfig {
    * sunset (needs latitude/longitude); "light" and "dark" always use that look.
    */
   look: { mode: 'sun' | GardenMode; latitude?: number; longitude?: number };
+  /** "personal" = based on your usual range, "github" = same as the green squares */
+  levelStyle: 'personal' | 'github';
   /** "repos": language bytes across your own repos. "commits": commits in the last year by repo language. */
   languageSource: 'repos' | 'commits';
   /** Count private repos for languages/stars (needs a PAT with repo scope). */

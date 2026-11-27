@@ -91,15 +91,17 @@ Every run also saves each look as its own file, so you can use them directly: `g
 
 ## How the tiles grow
 
-Each tile is one day, and it grows based on how much you coded that day (the same levels GitHub uses for the green squares).
+Each tile is one day, and it grows based on how much you coded that day compared to your own usual range. That way the garden fits how you code: whether your normal is 2 commits a day or 25, your good days bloom.
 
 | That day | What grows |
 | --- | --- |
 | Nothing | Just grass, maybe a pebble or a little clover |
-| A little | A tiny sprout |
-| Some | A bush with a bud on it |
-| A lot | A bush with flowers |
-| A LOT | A full bloom in a wooden planter box |
+| Quieter than usual | A tiny sprout |
+| A bit below your usual | A bush with a bud on it |
+| A bit above your usual | A bush with flowers |
+| One of your busy days | A full bloom in a wooden planter box |
+
+Your usual range leaves out your rarest quiet and busy days, so one huge day can't make the rest of your garden look small. If you'd rather use the same levels as GitHub's green squares, add `"levelStyle": "github"` to your config file.
 
 The weeks go along the island from left to right. Sunday to Wednesday are behind the stone path, and Thursday to Saturday are in front of it.
 
